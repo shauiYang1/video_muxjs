@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <video id="video" muted controls></video>
+  <script src="./node_modules/mux.js/dist/mux.js"></script>
+  <script>
+
+
+
+
+
+    // fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then(res => res.arrayBuffer()).then(res => {
+    //   console.log(res)
+    // })
+
+
+    let mediaSource = new MediaSource();
+    let transmuxer = new muxjs.mp4.Transmuxer();
+
+    /* video = document.getElementById('video');
+    video.src = URL.createObjectURL(mediaSource);
+    mediaSource.addEventListener("sourceopen", appendFirstSegment);
+    function appendFirstSegment() {
+      console.log('appendFirstSegment', mediaSource.readyState)
+      URL.revokeObjectURL(video.src);
+      sourceBuffer = mediaSource.addSourceBuffer(mime);
+
+      transmuxer.on('data', (segment) => {
+        let data = new Uint8Array(segment.initSegment.byteLength + segment.data.byteLength);
+        data.set(segment.initSegment, 0);
+        data.set(segment.data, segment.initSegment.byteLength);
+        console.log(muxjs.mp4.tools.inspect(data));
+        sourceBuffer.appendBuffer(data);
+        // console.log('data', mediaSource.readyState)
+
+      })
+      // sourceBuffer.addEventListener("updateend", function () {
+      //   mediaSource.endOfStream();
+      //   video.play();
+      // });
+      fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then((response) => {
+        return response.arrayBuffer();
+      }).then((response) => {
+        transmuxer.push(new Uint8Array(response));
+        transmuxer.flush();
+      })
+    } */
+
+    fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then((response) => {
+      return response.arrayBuffer();
+    }).then((response) => {
+      transferFormat(response)
+    })
+
+    function transferFormat(data) {
+      // 将源数据从ArrayBuffer格式保存为可操作的Uint8Array格式
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer
+      var segment = new Uint8Array(data);
+      var combined = false;
+      // 接收无音频ts文件，OutputType设置为'video'，带音频ts设置为'combined'
+      var outputType = 'combined';
+      var remuxedSegments = [];
+      var remuxedBytesLength = 0;
+      var remuxedInitSegment = null;
+      // remux选项默认为true，将源数据的音频视频混合为mp4，设为false则不混合
+      var transmuxer = new muxjs.mp4.Transmuxer({ remux: true });
+      // 监听data事件，开始转换流
+      transmuxer.on('data', function (event) {
+        console.log('transmuxer', event);
+        if (event.type === outputType) {
+          remuxedSegments.push(event);
+          remuxedBytesLength += event.data.byteLength;
+          remuxedInitSegment = event.initSegment;
+        }
+      });
+      transmuxer.on('done', function (event) {
+        var offset = 0;
+        var bytes = new Uint8Array(remuxedInitSegment.byteLength + remuxedBytesLength)
+        bytes.set(remuxedInitSegment, offset);
+        offset += remuxedInitSegment.byteLength;
+
+        for (var j = 0, i = offset; j < remuxedSegments.length; j++) {
+          bytes.set(remuxedSegments[j].data, i);
+          i += remuxedSegments[j].byteLength;
+        }
+        remuxedSegments = [];
+        remuxedBytesLength = 0;
+        // 解析出转换后的mp4相关信息，与最终转换结果无关
+        vjsParsed = muxjs.mp4.tools.inspect(bytes);
+        console.log('transmuxed', vjsParsed);
+
+        prepareSourceBuffer(combined, outputType, bytes);
+      })
+      // push方法可能会触发'data'事件，因此要在事件注册完成后调用
+      transmuxer.push(segment); // 传入源二进制数据，分割为m2ts包，依次调用上图中的流程
+      // flush的调用会直接触发'done'事件，因此要事件注册完成后调用
+      transmuxer.flush(); // 将所有数据从缓存区清出来
+    }
+    function prepareSourceBuffer(combined, outputType, bytes) {
+      var buffer;
+      video = document.getElementById('video');
+      video.controls = true;
+      // MediaSource Web API: https://developer.mozilla.org/zh-CN/docs/Web/API/MediaSource
+      mediaSource = new MediaSource();
+      video.src = URL.createObjectURL(mediaSource);
+      // 转换后mp4的音频格式 视频格式
+      var codecsArray = ["avc1.64001f", "mp4a.40.5"];
+
+      mediaSource.addEventListener('sourceopen', function () {
+        // MediaSource 实例默认的duration属性为NaN
+        mediaSource.duration = 0;
+        // 转换为带音频、视频的mp4
+        mime = 'video/mp4; codecs="mp4a.40.5,avc1.64001f"';
+        mime = 'video/mp4; codecs="' + 'avc1.64001f,mp4a.40.5' + '"';
+        // mime = 'video/mp4; codecs="' + (codecsArray[1] || codecsArray[0]) + '"';
+        buffer = mediaSource.addSourceBuffer(mime);
+        // if (combined) {
+        //   buffer = mediaSource.addSourceBuffer('video/mp4;codecs="' + 'avc1.64001f,mp4a.40.5' + '"');
+        // } else if (outputType === 'video') {
+        //   // 转换为只含视频的mp4
+        //   buffer = mediaSource.addSourceBuffer('video/mp4;codecs="' + codecsArray[0] + '"');
+        // } else if (outputType === 'audio') {
+        //   // 转换为只含音频的mp4
+        //   buffer = mediaSource.addSourceBuffer('audio/mp4;codecs="' + (codecsArray[1] || codecsArray[0]) + '"');
+        // }
+
+        buffer.addEventListener('updatestart', logevent);
+        buffer.addEventListener('updateend', logevent);
+        buffer.addEventListener('error', logevent);
+        video.addEventListener('error', logevent);
+        // mp4 buffer 准备完毕，传入转换后的数据
+        // 将 bytes 放入 MediaSource 创建的sourceBuffer中
+        // https://developer.mozilla.org/en-US/docs/Web/API/SourceBuffer/appendBuffer
+        buffer.appendBuffer(bytes);
+        // 自动播放
+        video.play();
+      });
+    };
+    function logevent(event) {
+      console.log('logevent', event)
+    }
+  </script>
+</body>
+
+</html>
