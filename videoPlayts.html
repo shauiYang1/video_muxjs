@@ -53,11 +53,13 @@
       })
     } */
 
-    fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then((response) => {
+    fetch('./output.ts').then((response) => {
       return response.arrayBuffer();
     }).then((response) => {
       transferFormat(response)
     })
+
+
 
     function transferFormat(data) {
       // 将源数据从ArrayBuffer格式保存为可操作的Uint8Array格式
@@ -65,7 +67,7 @@
       var segment = new Uint8Array(data);
       var combined = false;
       // 接收无音频ts文件，OutputType设置为'video'，带音频ts设置为'combined'
-      var outputType = 'combined';
+      var outputType = 'video';
       var remuxedSegments = [];
       var remuxedBytesLength = 0;
       var remuxedInitSegment = null;
@@ -73,7 +75,7 @@
       var transmuxer = new muxjs.mp4.Transmuxer({ remux: true });
       // 监听data事件，开始转换流
       transmuxer.on('data', function (event) {
-        console.log('transmuxer', event);
+        console.log(event);
         if (event.type === outputType) {
           remuxedSegments.push(event);
           remuxedBytesLength += event.data.byteLength;
@@ -118,7 +120,7 @@
         mediaSource.duration = 0;
         // 转换为带音频、视频的mp4
         mime = 'video/mp4; codecs="mp4a.40.5,avc1.64001f"';
-        mime = 'video/mp4; codecs="' + 'avc1.64001f,mp4a.40.5' + '"';
+        mime = 'video/mp4;codecs="' + codecsArray[0] + '"';
         // mime = 'video/mp4; codecs="' + (codecsArray[1] || codecsArray[0]) + '"';
         buffer = mediaSource.addSourceBuffer(mime);
         // if (combined) {
@@ -140,7 +142,7 @@
         // https://developer.mozilla.org/en-US/docs/Web/API/SourceBuffer/appendBuffer
         buffer.appendBuffer(bytes);
         // 自动播放
-        video.play();
+        // video.play();
       });
     };
     function logevent(event) {
