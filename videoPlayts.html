@@ -8,51 +8,15 @@
 </head>
 
 <body>
-  <video id="video" muted controls></video>
+  <video id="video" muted controls width="500" height="300"></video>
   <script src="./node_modules/mux.js/dist/mux.js"></script>
-  <script>
-
-
-
-
-
-    // fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then(res => res.arrayBuffer()).then(res => {
-    //   console.log(res)
-    // })
-
+  <script src="./node_modules/mpegts.js/dist/mpegts.js"></script>
+  <!--   <script>
 
     let mediaSource = new MediaSource();
     let transmuxer = new muxjs.mp4.Transmuxer();
 
-    /* video = document.getElementById('video');
-    video.src = URL.createObjectURL(mediaSource);
-    mediaSource.addEventListener("sourceopen", appendFirstSegment);
-    function appendFirstSegment() {
-      console.log('appendFirstSegment', mediaSource.readyState)
-      URL.revokeObjectURL(video.src);
-      sourceBuffer = mediaSource.addSourceBuffer(mime);
-
-      transmuxer.on('data', (segment) => {
-        let data = new Uint8Array(segment.initSegment.byteLength + segment.data.byteLength);
-        data.set(segment.initSegment, 0);
-        data.set(segment.data, segment.initSegment.byteLength);
-        console.log(muxjs.mp4.tools.inspect(data));
-        sourceBuffer.appendBuffer(data);
-        // console.log('data', mediaSource.readyState)
-
-      })
-      // sourceBuffer.addEventListener("updateend", function () {
-      //   mediaSource.endOfStream();
-      //   video.play();
-      // });
-      fetch('./6e314140-287d-41c4-976d-d201f1a756cf.ts').then((response) => {
-        return response.arrayBuffer();
-      }).then((response) => {
-        transmuxer.push(new Uint8Array(response));
-        transmuxer.flush();
-      })
-    } */
-
+    // 仅支持 h264 视频编码格式。
     fetch('./output.ts').then((response) => {
       return response.arrayBuffer();
     }).then((response) => {
@@ -147,6 +111,20 @@
     };
     function logevent(event) {
       console.log('logevent', event)
+    }
+  </script> -->
+
+  <script>
+    if (mpegts.getFeatureList().mseLivePlayback) {
+      var videoElement = document.getElementById('video');
+      var player = mpegts.createPlayer({
+        type: 'mse', // could also be mpegts, m2ts, flv
+        isLive: true,
+        url: './6e314140-287d-41c4-976d-d201f1a756cf.ts'
+      });
+      player.attachMediaElement(videoElement);
+      player.load();
+      player.play();
     }
   </script>
 </body>
