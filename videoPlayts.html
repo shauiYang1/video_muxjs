@@ -10,7 +10,7 @@
 <body>
   <video id="video" muted controls width="500" height="300"></video>
   <script src="./node_modules/mux.js/dist/mux.js"></script>
-  <script src="./node_modules/mpegts.js/dist/mpegts.js"></script>
+  <script src="mpegts.js"></script>
   <!--   <script>
 
     let mediaSource = new MediaSource();
@@ -119,8 +119,9 @@
       var videoElement = document.getElementById('video');
       var player = mpegts.createPlayer({
         type: 'mse', // could also be mpegts, m2ts, flv
-        isLive: true,
+        isLive: false,
         url: './6e314140-287d-41c4-976d-d201f1a756cf.ts'
+        // url: './16bc35ff-bbd2-4190-a874-c78b89b40d7f.flv'
       });
       player.attachMediaElement(videoElement);
       player.load();
