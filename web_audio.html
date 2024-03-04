@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Audio Visualization</title>
+</head>
+
+<body>
+
+  <audio controls id="audio_element"></audio>
+  <canvas id="audioCanvas"></canvas>
+  <button class="start">start</button>
+  <button class="close">close</button>
+  <!-- <button class="player">播放流</button> -->
+  <script src="./web_audio.js"></script>
+  <!-- <script src="/ZLMRTCClient.js" type="text/javascript"></script> -->
+  <!-- <script>
+    const playerEl = document.querySelector('.player');
+    playerEl.addEventListener('click', () => {
+      const player = new window.ZLMRTCClient.Endpoint({
+        element: document.querySelector('#video_element'), // video 标签
+        debug: false, // 是否打印日志
+        zlmsdpUrl: 'rtmp://192.168.3.117:8099/live/test', //流地址
+        simulcast: false,
+        useCamera: true,
+        audioEnable: true,
+        videoEnable: true,
+        recvOnly: true,
+        resolution: { w: 1366, h: 768 },
+      })
+      // eslint-disable-next-line no-undef
+      player.on(ZLMRTCClient.Events.WEBRTC_ON_REMOTE_STREAMS, event => { //获取到了远端流，可以播放
+        console.log('播放成功', event.streams)
+      });
+      // eslint-disable-next-line no-undef
+      player.on(ZLMRTCClient.Events.WEBRTC_ON_DATA_CHANNEL_CLOSE, event => {
+        console.log('rtc datachannel 关闭 :', event)
+      });
+    })
+  </script> -->
+</body>
+
+</html>

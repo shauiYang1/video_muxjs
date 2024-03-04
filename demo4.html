@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <button id="grow">js堆内存泄漏</button>
+  <button id="closure">js闭包引起的内存泄漏</button>
+  <button id="createTimeout">创建计时器</button>
+  <button id="timeout">清除计时器</button>
+  <button id="clearClosure">清除闭包</button>
+  <script>
+
+    // 全局变量
+    /* let x = [];
+    function grow() {
+
+      for (var i = 0; i < 100; i++) {
+        x.push(new Array(1000000).join('x'));
+      }
+    }
+    document.getElementById('grow').addEventListener('click', grow);
+ */
+
+    // 闭包
+    /* const fun = () => {
+      let a = [];
+      return function () {
+        a.push(new Array(1000000).join('c'));
+        // console.log(a);
+      }
+    }
+    let f = null;
+    document.getElementById('closure').addEventListener('click', () => {
+      f = fun();
+    }); */
+    // document.getElementById('clearClosure').addEventListener('click', () => f = null);
+
+    // 未清理的计时器
+    var timeout = setInterval(function () {
+      console.log(123);
+    }, 100)
+
+    document.getElementById('timeout').addEventListener('click', () => clearTimeout(timeout));
+
+
+
+    /*  function setCallback() {
+       const data = { counter: 0, hugeString: new Array(100000).join('x') };
+       return function cb() {
+         data.counter++; // data 对象现在已经属于回调函数的作用域了        console.log(data.counter);    
+       }
+     }
+     document.getElementById('setCallback').addEventListener('click', setInterval(setCallback(), 1000)); */
+
+  </script>
+</body>
+
+</html>

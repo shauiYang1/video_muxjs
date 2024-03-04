@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+<script>
+  import { ImagePool } from '@squoosh/lib';
+  import { cpus } from 'os';
+  const imagePool = new ImagePool(cpus().length);
+
+  const preprocessOptions = {
+    // 压缩参数：比如缩放图片
+    resize: {
+      width: 100,
+      height: 50,
+    }
+  };
+  await image.preprocess(preprocessOptions);
+  const encodeOptions = {
+    mozjpeg: {}, // 默认压缩输出为jpeg格式
+    jxl: {
+      quality: 90, // 设置压缩质量
+    },
+  };
+  const result = await image.encode(encodeOptions);
+</script>
+
+</html>

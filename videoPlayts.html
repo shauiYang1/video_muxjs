@@ -8,9 +8,13 @@
 </head>
 
 <body>
-  <video id="video" muted controls width="500" height="300"></video>
+  <video id="video" muted controls width="500" height="300">
+    <source src="./c5ae2f81-1193-4d52-b257-150942111541.ts" type="mpegts" />
+  </video>
+  <script src="./node_modules/video.js/dist/video.js"></script>
   <script src="./node_modules/mux.js/dist/mux.js"></script>
-  <script src="mpegts.js"></script>
+  <script src="./mpegts.js"></script>
+  <script src="./videojs-mpegts.js"></script>
   <!--   <script>
 
     let mediaSource = new MediaSource();
@@ -115,18 +119,64 @@
   </script> -->
 
   <script>
-    if (mpegts.getFeatureList().mseLivePlayback) {
-      var videoElement = document.getElementById('video');
-      var player = mpegts.createPlayer({
-        type: 'mse', // could also be mpegts, m2ts, flv
-        isLive: false,
-        url: './6e314140-287d-41c4-976d-d201f1a756cf.ts'
-        // url: './16bc35ff-bbd2-4190-a874-c78b89b40d7f.flv'
+    /*  if (mpegts.getFeatureList().mseLivePlayback) {
+       var videoElement = document.getElementById('video');
+       var player = mpegts.createPlayer({
+         type: 'mse', // could also be mpegts, m2ts, flv
+         isLive: false,
+         url: './6e314140-287d-41c4-976d-d201f1a756cf.ts'
+         // url: './16bc35ff-bbd2-4190-a874-c78b89b40d7f.flv'
+       });
+       player.attachMediaElement(videoElement);
+       player.load();
+       player.play();
+     } */
+
+
+
+
+    // 结合 video.js、mpegts 使用
+
+    function initVideo() {
+      const options = {
+        autoplay: true, //自动播放
+        loop: false, //视频一结束就重新开始
+        // aspectRatio: '16:9', //显示比率
+        fluid: false,
+        language: 'zh-CN',
+        fullscreen: {
+          options: { navigationUI: 'hide' }
+        }
+      };
+
+      const video = videojs(document.getElementById('video'), {
+        ...options,
+        techOrder: ['html5', 'flvjs', 'MpegTsJs'], // 兼容顺序
+        html5: {
+          hls: {
+            withCredentials: true
+          }
+        },
+        flvjs: {
+          config: {
+            lazyLoadMaxDuration: 100 * 60
+          },
+          mediaDataSource: {
+            isLive: false,
+            hasAudio: false
+          }
+        },
+        MpegTsJs: {
+          mediaDataSource: {
+            isLive: false,
+            enableWorkerForMSE: true,  // 为媒体源启用独立线程
+            autoCleanupSourceBuffer: true // 对SourceBuffer执行自动清理
+          },
+        },
+        sources: [{ src: './c5ae2f81-1193-4d52-b257-150942111541.ts', type: 'mpegts' }]
       });
-      player.attachMediaElement(videoElement);
-      player.load();
-      player.play();
     }
+    initVideo()
   </script>
 </body>
 

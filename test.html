@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div class="home">
+    <div class="box">
+
+    </div>
+    <!-- <iframe name="iframe" src="http://192.168.33.2:9000" style="width: 100%;height: 100%;" frameborder="0"></iframe> -->
+    <!-- <iframe name="iframe" src="http://192.168.100.109:42006" style="width: 100%;height: 100%;" frameborder="0"></iframe> -->
+    <!-- <button style="position: fixed; bottom: 0;">底部</button> -->
+  </div>
+
+  <div class="btns">
+    <!-- <button onclick="send()">send</button> -->
+    <!-- <button onclick="sendAlarmInfo()">sendAlarmInfo</button>
+    <button onclick="backHome()">backHome</button>
+    <button onclick="analyse()">analyse</button> -->
+  </div>
+</body>
+<script>
+  const iframe = document.querySelector('iframe');
+  if (iframe.attachEvent) {
+    iframe.attachEvent("onload", function () {
+      console.log('完成了')
+      send()
+    });
+  } else {
+    iframe.onload = function () {
+      console.log('完成了.')
+      send()
+    };
+  }
+  function generateUID() {
+    const timestamp = Date.now().toString(); // 获取当前时间戳的字符串形式
+    const random = Math.floor(Math.random() * 10000).toString(); // 生成一个随机数的字符串形式
+
+    const uid = timestamp + random; // 拼接时间戳和随机数
+    return uid;
+  }
+  function send() {
+    let frame = window.frames['iframe']
+    const currentDate = new Date();
+    currentDate.setHours(currentDate.getHours() + 24);
+    // currentDate.setMinutes(currentDate.getMinutes() +1);
+    expireTime= currentDate.valueOf()
+    frame.postMessage(JSON.stringify({
+      type: 'deviceControl',
+      data: {
+        expireTime,
+        megData:{status:1},
+        "token": generateUID(),
+        "userInfo": {
+          "belongDepartName": "string",
+          "loginName": "1",
+          "loginIp": "2",
+          "token": "1",
+          "userId": "1",
+          "userName": "1"
+        },
+        "vuex": {
+          "SPS_CoreElementSearch": true
+        }
+      }
+    }), '*');
+  }
+  window.addEventListener('message', (e) => {
+     console.log('父页面收到消息',e.data)
+    //  send()
+  }, false);
+  
+  function sendAlarmInfo() {
+    let frame = window.frames['iframe']
+    frame.postMessage({
+      type: 'queryAlarmEvent',
+      data: JSON.stringify({
+        status: 1,
+        alarmInfo: {
+          ALARM_ID: '9988',
+        }
+      })
+    }, '*');
+  }
+  // function backHome() {
+  //   document.querySelector('iframe').src = 'http://192.168.3.97:8080/#/home'
+  // }
+  // function analyse() {
+  //   document.querySelector('iframe').src = 'http://192.168.3.97:8080/#/analyse?deviceId=J110301'
+  // }
+  
+  // function compressImage(file, quality) {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(file);
+  //     reader.onload = function (event) {
+  //       const img = new Image();
+  //       img.src = event.target.result;
+  //       img.onload = function () {
+  //         let width = img.width;
+  //         let height = img.height;
+  //         const canvas = document.createElement('canvas');
+  //         canvas.width = width;
+  //         canvas.height = height;
+
+  //         const ctx = canvas.getContext('2d');
+  //         ctx.drawImage(img, 0, 0, width, height);
+
+  //         canvas.toBlob(
+  //           blob => {
+  //             resolve(blob);
+  //           },
+  //           // file.type || 'image/jpge',
+  //           'webp',
+  //           quality
+  //         );
+  //       };
+  //     };
+  //     reader.onerror = function (error) {
+  //       reject(error);
+  //     };
+  //   });
+  // }
+
+  // // 使用示例
+  // const input = document.getElementById('image-input');
+  // input.addEventListener('change', async function (event) {
+  //   const file = event.target.files[0];
+  //   console.log('file', file)
+  //   const compressedImage = await compressImage(file, 0.1);
+  //   console.log('compressedImage', compressedImage)
+  //   // 压缩后的图片可以通过compressedImage进行处理，比如上传到服务器等操作
+  //   // 假设您已经有一个blob对象
+  //   var blob = new Blob([compressedImage], { type: 'image/png' });
+
+  //   // 创建一个临时URL
+  //   var url = URL.createObjectURL(blob);
+
+  //   // 将URL赋值给img标签的src属性
+  //   var img = document.querySelector('#compressedImg');
+  //   img.src = url;
+  // });
+
+</script>
+
+</html>
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  .home {
+    display: flex;
+    background-image: url('./bg.png');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    width: 100%;
+    height: 100dvh;
+    background: green;
+  }
+
+
+  .btns {
+    position: absolute;
+    width: 40px;
+    height: 20px;
+    background: red;
+    left: 0;
+    top: 0;
+
+  }
+  /* // 720 * 1280 (原始比例固定值) */
+  .box{
+    position: relative;
+    width: 872px;
+    height: 640px;
+    background: black;
+   
+  }
+  .box::after{
+      position: absolute;
+      display: block;
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: gold;
+      top: 256px;
+      left: 361.9315494710641px;
+  }
+</style>

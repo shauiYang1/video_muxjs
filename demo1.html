@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head></head>
+
+<body style="height: 2000px;">
+  <h1>1!</h1>
+  <button id="change">change</button>
+  <button id="scrollButton">scrollButton</button>
+  <script>
+    var h1 = document.querySelector('h1');
+    var btn = document.querySelector('button');
+
+    // 死循环指定的时间
+    function delay(duration) {
+      // var start = Date.now();
+      // console.log('delay函数')
+      // while (Date.now() - start < duration) { }
+      console.log('测试机')
+    }
+
+    btn.onclick = function () {
+      h1.textContent = '1121';
+      delay(3000);
+    };
+    function smoothScrollTo(targetY, duration) {
+      const startY = window.pageYOffset;
+      const distance = targetY - startY;
+      const startTime = performance.now();
+
+      function step(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const ease = easingFunction(progress);
+        window.scrollTo(0, startY + distance * ease);
+
+        if (elapsedTime < duration) {
+          requestAnimationFrame(step);
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function easingFunction(t) {
+      return t * t * t;
+    }
+
+    // 使用示例
+    const button = document.querySelector('#scrollButton');
+    button.addEventListener('click', () => {
+      smoothScrollTo(1000, 1000);
+    });
+  </script>
+</body>
+
+</html>

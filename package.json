@@ -12,5 +12,8 @@
     "@squoosh/lib": "^0.5.3",
     "mpegts.js": "^1.7.3",
     "mux.js": "^6.3.0"
+  },
+  "devDependencies": {
+    "video.js": "^8.10.0"
   }
 }
