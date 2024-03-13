@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <link href='http://192.168.3.205:3000/bigemap.js/v2.1.0/bigemap.css' rel='stylesheet' />
+  <script src='http://192.168.3.205:3000/bigemap.js/v2.1.0/bigemap.js'></script>
+  <!-- 线段绘制相关 -->
+  <link rel="stylesheet" href="./Bigemap.draw.css" />
+  <script src="./bm.draw.min.js"></script>
+  <!-- 点位聚合相关 -->
+  <link rel="stylesheet" href="./MarkerCluster.Default.css" />
+  <script src="./bm.markercluster-src.js"></script>
+  <script src="./plot.js"></script>
+  <!-- 生成图片 -->
+  <script type="text/javascript" src="./html2canvas/jquery.min.js"></script>
+  <script type="text/javascript" src="./html2canvas/html2canvas.min.js"></script>
+  <script type="text/javascript" src="./html2canvas/rgbcolor.js"></script>
+  <script type="text/javascript" src="./html2canvas/canvg.js"></script>
+  <script type="text/javascript" src="./html2canvas/umd.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .tools {
+      position: absolute;
+      display: flex;
+      z-index: 99;
+      right: 0;
+      top: 60px;
+    }
+
+    .icon img {
+      width: 100%;
+      height: 100%;
+    }
+
+    .my-div-icon {
+      background-color: red;
+      padding: 4px;
+      border-radius: 2px;
+
+    }
+  </style>
+  <title>baidu-online</title>
+</head>
+
+<body>
+  <div id='map' class="map">
+
+  </div>
+
+  <div class="tools">
+    <button id="polyline">绘制线段</button>
+    <button id="connect_line">选点连线</button>
+    <button id="marker_text">添加文字标注</button>
+    <button class="btn btn-success" onclick='activate("attackArrow")'>测试进攻方向</button>
+    <button id="create-image" class="button button-tiny button-rounded button-primary ">生成图片html2canvas</button>
+    <button id="screen_shot" class="button button-tiny button-rounded button-primary ">生成图片screen_shot</button>
+    <script src="./screenShotPlugin.umd.js"></script>
+  </div>
+  <script>
+    let toolType = null;
+
+
+    BM.Config.HTTP_URL = 'http://192.168.3.205:3000';
+    const map = BM.map('map', 'bigemap.ctw393y0', { crs: BM.CRS.Baidu, center: [31.8179931640625, 117.11885070800781], zoom: 16, zoomControl: true, attributionControl: false });
+
+    var drawnItems = new BM.FeatureGroup();
+    drawnItems.on('click', function (e) {
+      BM.DomEvent.stopPropagation(e);
+      console.log('删除点击的线段', e)
+      drawnItems.removeLayer(e.layer)
+    })
+    //添加在地图上
+    map.addLayer(drawnItems);
+
+
+    // 地图缩放级别监听
+    map.on('zoomend', () => {
+      const z = map.getZoom();
+      console.log('地图缩放', z)
+    })
+
+    //登陆聚合对象
+    const markers = new BM.MarkerClusterGroup({
+      showCoverageOnHover: false, //不显示边界
+      zoomToBoundsOnClick: true,//点击放大到对应位置
+      removeOutsideVisibleBounds: false,
+      animate: true,//动画
+      maxClusterRadius: 100,//缩放半径,
+      disableClusteringAtZoom: null,//在指定级别以下禁用缩放
+      //使用定义的图标来显示
+      iconCreateFunction: function (cluster) {
+        var markers = cluster.getAllChildMarkers();
+        return BM.divIcon({
+          html: `<div class="icon">
+              ${markers.length}
+              </div>`,
+          iconSize: BM.point(40, 40)
+        });
+      }
+    })
+
+    // 地图点击事件获取地图的经纬坐标
+    map.on('click', function (e) {
+      if (toolType && toolType !== 'marker_text') return
+
+      console.log('mapClick', e)
+      const str = 'lng:' + e.latlng.lng + ',lat:' + e.latlng.lat;
+      console.log('经纬度', str)
+
+      let markerOption = {};
+      // 添加文字描述的marker 的配置
+      if (toolType === 'marker_text') {
+        markerOption = {
+          icon: BM.divIcon({ html: '<span class="my-div-icon">111</span>' })
+        }
+      }
+
+      let marker = BM.marker(e.latlng, {
+        draggable: true,
+        ...markerOption
+      });
+
+      markers.addLayer(marker);
+      map.addLayer(markers);
+      marker.on('click', (e) => {
+        console.log('覆盖物点击', e)
+      })
+      marker.on('dragstart', function (e) {
+        console.log('覆盖物点位拖拽开始', e.target._latlng)
+      })
+      marker.on('dragend', function (e) {
+        console.log('覆盖物点位拖拽结束', e.target._latlng)
+      })
+    });
+
+
+    // 绘制线段
+    document.querySelector('#polyline').addEventListener('click', () => {
+      const draw = new BM.Draw.Polyline(map);
+      draw.enable();
+      toolType = "polyline"
+    })
+
+    //监听绘画完成事件
+    map.on(BM.Draw.Event.CREATED, function (e) {
+      drawnItems.addLayer(e.layer);
+      console.log('drawnItems', drawnItems)
+      toolType = null;
+    });
+
+    //测试添加点位到图层组
+    function addMarkerFeature() {
+      let marker = BM.marker({
+        lng: 117.11885070800781,
+        lat: 31.8179931640625
+      }, {
+        draggable: true,
+      });
+      return marker;
+    }
+
+
+    // 军标绘制相关
+    var drawPlot = new BM.Plot.Draw(map, {
+      repeat: true,
+      absorb: { distance: 10, marker: BM.circleMarker([0, 0], { radius: 6, weight: 1, fillOpacity: 1, fillColor: "white" }) },
+      doubleArrow: { color: "pink" },
+      polyline: { weight: 10 }
+    });
+
+    var edit = new BM.Plot.Edit(map, {
+      absorb: {
+        distance: 10,
+        marker: BM.circleMarker([0, 0], { radius: 6, weight: 1, fillOpacity: 1, fillColor: "white" })
+      }, circle: {
+        icon: [!1, BM.divIcon({ html: "<span></span>" })], editable: function (e, a) {
+          if (0 === a.index) return !0;
+          var i = m.distance(a.path[0], a.path[1]);
+          return i > 20 && i < 600
+        }
+      }
+    });
+
+    const activate = (e) => {
+      edit.isEdit() && edit.disable(), drawPlot.enable(e)
+    }
+    map.on("contextmenu", (function () {
+      drawPlot.disable(), edit.disable()
+    }));
+
+    // 添加文字标识
+    document.querySelector('#marker_text').addEventListener('click', () => {
+      if (toolType === 'marker_text') {
+        toolType = null;
+      } else {
+        toolType = 'marker_text';
+      }
+    })
+  </script>
+  <script>
+    // 生成图片
+    document.querySelector('#create-image').addEventListener('click', function () {
+      const nodeList = [];
+      $('#map').find('svg').each(function (index, node) {
+        //获取svg的父节点
+        var parentNode = node.parentNode;
+        //获取svg的html代码
+        var svg = node.outerHTML.trim();
+        //创建一个<canvas>，用于放置转换后的元素
+        var canvas = document.createElement('canvas');
+        //将svg元素转换为canvas元素
+        canvgv2(canvas, svg);
+        //设置新canvas元素的位置
+        if (node.style.position) {
+          canvas.style.position += node.style.position;
+          canvas.style.left += node.style.left;
+          canvas.style.top += node.style.top;
+        }
+        var trans = getComputedStyle(node).transform.match(/\((.*)\)/);
+        if (trans && trans[1]) {
+          trans[1] = trans[1].split(',');
+          !isNaN(parseInt(trans['1']['4'])) ? canvas.style.left += parseInt(trans['1']['4']) : true;
+          !isNaN(parseInt(trans['1']['5'])) ? canvas.style.top += parseInt(trans['1']['5']) : true;
+        }
+        //删除svg元素
+        parentNode.removeChild(node);
+        //增加canvas元素
+        parentNode.appendChild(canvas);
+        nodeList.push({
+          p: parentNode,
+          a: node,
+          r: canvas
+        });
+      });
+      html2canvas(document.getElementById('map'), {
+        backgroundColor: null,
+        useCORS: true,
+        allowTaint: true,
+      }).then(function (canvas) {
+        nodeList.map(v => {
+          v.p.removeChild(v.r);
+          v.p.appendChild(v.a);
+        });
+        nodeList.length = 0;
+        var dataUrl = canvas.toDataURL("image/png");
+        var url = dataUrl;
+        var a = document.createElement('a');
+        var event = new MouseEvent('click');
+        a.download = 'map.png';
+        a.href = url;
+        a.dispatchEvent(event);
+      });
+    });
+    document.querySelector('#screen_shot').addEventListener('click', () => {
+      new screenShotPlugin({
+        enableWebRtc: true, completeCallback: ({ base64, cutInfo }) => {
+          console.log(base64);
+          var byteCharacters = atob(
+            base64.toString().replace(/^data:image\/(png|jpeg|jpg);base64,/, "")
+          );
+          var byteNumbers = new Array(byteCharacters.length);
+          for (var i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          var byteArray = new Uint8Array(byteNumbers);
+          var blob = new Blob([byteArray], {
+            type: undefined,
+          });
+          var aLink = document.createElement("a");
+          aLink.download = "测试地图截屏.jpg"; //这里写保存时的图片名称
+          aLink.href = URL.createObjectURL(blob);
+          aLink.click();
+        }, closeCallback: () => {
+          console.log("截图窗口关闭");
+        },
+        level: 999,
+        screenShotDom: document.querySelector('#id'),
+        canvasWidth: 1920,
+        canvasHeight: 1080,
+        position: {
+          left: 0,
+          top: 0
+        }
+      });
+    })
+
+  </script>
+</body>
+
+</html>
